@@ -1,0 +1,26 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build
+        run: |
+          docker build . --file Dockerfile --tag ${{ secrets.USERNAME }}/nginx-rtmp-httpflv
+
+      - name: Login
+        run: docker login -u ${{ secrets.USERNAME }} -p ${{ secrets.PASSWORD }}
+
+      - name: Push
+        run: |
+          docker push ${{ secrets.USERNAME }}/nginx-rtmp-httpflv
+          export TAG=$(echo ${{ github.ref }} | sed 's/refs\/tags\//''/g')
+          docker tag ${{ secrets.USERNAME }}/nginx-rtmp-httpflv ${{ secrets.USERNAME }}/nginx-rtmp-httpflv:$TAG
+          docker push ${{ secrets.USERNAME }}/nginx-rtmp-httpflv:$TAG
